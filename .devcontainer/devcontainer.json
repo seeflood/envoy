@@ -2,7 +2,7 @@
   "name": "Envoy Dev",
   "dockerFile": "Dockerfile",
   "runArgs": [
-    "--user=vscode",
+    "--user=root",
     "--cap-add=SYS_PTRACE",
     "--cap-add=NET_RAW",
     "--cap-add=NET_ADMIN",
@@ -34,7 +34,7 @@
       "**/bazel-*/**": true
     }
   },
-  "remoteUser": "vscode",
+  "remoteUser": "root",
   "containerUser": "vscode",
   "postCreateCommand": ".devcontainer/setup.sh",
   "extensions": [
