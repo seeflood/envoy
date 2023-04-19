@@ -32,7 +32,6 @@
 #include "gtest/gtest.h"
 
 using testing::_;
-using testing::DoAll;
 using testing::InSequence;
 using testing::Invoke;
 using testing::NiceMock;
@@ -61,13 +60,16 @@ public:
         should_use_unified_(legacy_or_unified == LegacyOrUnified::Unified) {}
 
   void setup() {
+    auto backoff_strategy = std::make_unique<JitteredExponentialBackOffStrategy>(
+        SubscriptionFactory::RetryInitialDelayMs, SubscriptionFactory::RetryMaxDelayMs, random_);
+
     if (isUnifiedMuxTest()) {
       grpc_mux_ = std::make_unique<XdsMux::GrpcMuxDelta>(
           std::unique_ptr<Grpc::MockAsyncClient>(async_client_), dispatcher_,
           *Protobuf::DescriptorPool::generated_pool()->FindMethodByName(
               "envoy.service.discovery.v2.AggregatedDiscoveryService.StreamAggregatedResources"),
           random_, *stats_.rootScope(), rate_limit_settings_, local_info_, false,
-          std::move(config_validators_),
+          std::move(config_validators_), std::move(backoff_strategy),
           /*xds_config_tracker=*/XdsConfigTrackerOptRef());
       return;
     }
@@ -76,7 +78,7 @@ public:
         *Protobuf::DescriptorPool::generated_pool()->FindMethodByName(
             "envoy.service.discovery.v3.AggregatedDiscoveryService.StreamAggregatedResources"),
         random_, *stats_.rootScope(), rate_limit_settings_, local_info_,
-        std::move(config_validators_),
+        std::move(config_validators_), std::move(backoff_strategy),
         /*xds_config_tracker=*/XdsConfigTrackerOptRef());
   }
 

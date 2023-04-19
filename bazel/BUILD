@@ -24,6 +24,18 @@ sh_library(
     srcs = ["volatile_env.sh"],
 )
 
+# Stamp derived from tree hash + dirty status if `BAZEL_VOLATILE_DIRTY`
+# is set, otherwise the git commit
+genrule(
+    name = "volatile-scm-hash",
+    outs = ["volatile-scm-hash.txt"],
+    cmd = """
+    grep BUILD_SCM_HASH bazel-out/volatile-status.txt > $@
+    """,
+    stamp = 1,
+    tags = ["no-remote-exec"],
+)
+
 genrule(
     name = "gnu_build_id",
     outs = ["gnu_build_id.ldscript"],
@@ -349,6 +361,26 @@ config_setting(
 )
 
 config_setting(
+    name = "disable_envoy_mobile_request_compression",
+    values = {"define": "envoy_mobile_request_compression=disabled"},
+)
+
+config_setting(
+    name = "disable_envoy_mobile_stats_reporting",
+    values = {"define": "envoy_mobile_stats_reporting=disabled"},
+)
+
+config_setting(
+    name = "disable_envoy_mobile_listener",
+    values = {"define": "envoy_mobile_listener=disabled"},
+)
+
+config_setting(
+    name = "disable_http_datagrams",
+    values = {"define": "enable_http_datagrams=disabled"},
+)
+
+config_setting(
     name = "disable_logging",
     values = {"define": "enable_logging=disabled"},
 )
@@ -594,6 +626,14 @@ config_setting(
     ],
 )
 
+selects.config_setting_group(
+    name = "android_opt",
+    match_all = [
+        ":opt_build",
+        ":android",
+    ],
+)
+
 config_setting(
     name = "android_logger",
     values = {"define": "logger=android"},
@@ -647,6 +687,14 @@ selects.config_setting_group(
     match_all = [
         ":apple",
         ":dbg_build",
+    ],
+)
+
+selects.config_setting_group(
+    name = "apple_opt",
+    match_all = [
+        ":opt_build",
+        ":apple",
     ],
 )
 
